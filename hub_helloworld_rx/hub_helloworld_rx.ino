@@ -31,6 +31,7 @@ struct payload_t {                 // Structure of our payload
   unsigned long ms;
   unsigned long counter;
   int buttonState;
+  int playerId;
 };
 
 
@@ -59,6 +60,7 @@ void loop(void){
     Serial.print(" at ");
     Serial.println(payload.ms);
     Serial.println(payload.buttonState);
+    Serial.println(payload.playerId);
   }
 }
 

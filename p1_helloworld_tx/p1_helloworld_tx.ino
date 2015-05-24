@@ -23,8 +23,8 @@ RF24 radio(7,8);                    // nRF24L01(+) radio attached using Getting 
 
 RF24Network network(radio);          // Network uses that radio
 
-const uint16_t player2 = 02;    // Address of our node in Octal format
-const uint16_t player1 = 01;    // Address of the third node in Octal format
+uint16_t player;    // Address of our node in Octal format
+//const uint16_t player1;    // Address of the third node in Octal format
 const uint16_t hub = 00;        // Address of the other node in Octal format
       
 const int buttonPin = 4;
@@ -32,7 +32,7 @@ const int buttonPin = 4;
 int buttonState = 0;
 
 const unsigned long interval = 500; //ms  // How often to send 'hello world to the other unit
-
+int playerId;
 unsigned long last_sent;             // When did we last send?
 unsigned long packets_sent;          // How many have we sent already
 
@@ -42,18 +42,28 @@ struct payload_t {      // Structure of our payload
   unsigned long ms;
   unsigned long counter;
   int buttonState;
+  int playerId;
 };
 
 void setup(void)
 {
   Serial.begin(57600);
   Serial.println("RF24Network/examples/helloworld_tx/");
- 
-  pinMode(buttonPin,INPUT);
+  
+  pinMode(2,INPUT_PULLUP);
+  pinMode(4,INPUT);
+  
+  if(digitalRead(2) == LOW){
+    playerId = 1;  
+    player = 01;
+  } else {
+    playerId = 2;
+    player = 02;
+  }
   
   SPI.begin();
   radio.begin();
-  network.begin(/*channel*/ 90, /*node address*/ player1);
+  network.begin(/*channel*/ 90, /*node address*/ player);
 }
 
 void loop() {
@@ -67,7 +77,7 @@ void loop() {
     last_sent = now;
 
     Serial.print("Sending...");
-    payload_t payload = { millis(), packets_sent++ ,buttonState};
+    payload_t payload = { millis(), packets_sent++ ,buttonState, playerId};
     RF24NetworkHeader header(/*to node*/ hub);
     bool ok = network.write(header,&payload,sizeof(payload));
     if (ok)

@@ -41,6 +41,7 @@ struct payload_t {                  // Structure of our payload
   unsigned long ms;
   unsigned long counter;
   int buttonState;
+  //int playerId;
 };
 
 void setup(void)
@@ -66,7 +67,7 @@ void loop() {
     last_sent = now;
 
     Serial.print("Sending...");
-    payload_t payload = { millis(), packets_sent++, buttonState };
+    payload_t payload = { millis(), packets_sent++, buttonState, playerId };
     RF24NetworkHeader header(/*to node*/ hub);
     bool ok = network.write(header,&payload,sizeof(payload));
     if (ok) 
