@@ -20,7 +20,7 @@
 #include <SPI.h>
 #include <IRremote.h>
 
-RF24 radio(7,8);                // nRF24L01(+) radio attached using Getting Started board 
+RF24 radio(9,10);                // nRF24L01(+) radio attached using Getting Started board 
 
 RF24Network network(radio);      // Network uses that radio
 const uint16_t hub = 00;    // Address of our node in Octal format ( 04,031, etc)
@@ -34,7 +34,6 @@ struct payload_t {                 // Structure of our payload
   int playerId;
   bool hit;
 };
-
 
 void setup(void)
 {

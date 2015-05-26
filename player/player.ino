@@ -20,13 +20,15 @@
 #include <SPI.h>
 #include <IRremote.h>
 
+#define DEBUG
+
 /*** IR Receiver ***/
-int RECV_PIN = 10;
+int RECV_PIN = 7;
 IRrecv irrecv(RECV_PIN);
 decode_results results;
-//bool hit;
+bool hit;
 
-RF24 radio(7,8);                    // nRF24L01(+) radio attached using Getting Started board 
+RF24 radio(9,10);                    // nRF24L01(+) radio attached using Getting Started board 
 
 RF24Network network(radio);          // Network uses that radio
 
@@ -38,10 +40,11 @@ const int buttonPin = 4;
 
 int buttonState = 0;
 
-const unsigned long interval = 500; //ms  // How often to send 'hello world to the other unit
+const unsigned long interval = 2000; //ms  // How often to send 'hello world to the other unit
 int playerId;
 unsigned long last_sent;             // When did we last send?
 unsigned long packets_sent;          // How many have we sent already
+
 
 
 struct payload_t {      // Structure of our payload
@@ -50,13 +53,12 @@ struct payload_t {      // Structure of our payload
   unsigned long counter;
   int buttonState;
   int playerId;
-  decode_results results;
-  //bool hit;
+  bool hit;
 };
 
 void setup(void)
 {
-  Serial.begin(9600);
+  Serial.begin(57600);
 
   pinMode(2,INPUT_PULLUP);
   pinMode(4,INPUT);
@@ -72,28 +74,32 @@ void setup(void)
   SPI.begin();
   radio.begin();
   network.begin(/*channel*/ 90, /*node address*/ player);
-  
+  irrecv.blink13(0);
   irrecv.enableIRIn(); // Start the IR receiver
 }
 
 void loop() {
+  network.update();                          // Check the network regularly  
   
-  //buttonState = digitalRead(buttonPin);
-  
+  buttonState = digitalRead(buttonPin);
+  if (irrecv.decode(&results)) {
+   Serial.println(results.value, HEX);
+   if(results.value == 0x242A){ 
+     hit = true;
+   }
+   Serial.println(hit);
+   irrecv.resume(); // Receive the next value
+  }
 
 //  delay(100);
-  network.update();                          // Check the network regularly  
+  
   unsigned long now = millis();              // If it's time to send a message, send it!
   if ( now - last_sent >= interval  )
   {
-      if (irrecv.decode(&results)) {
-    Serial.println(results.value, HEX);
-    irrecv.resume(); // Receive the next value
-  }
     last_sent = now;
 
     Serial.print("Sending...");
-    payload_t payload = { millis(), packets_sent++ ,buttonState, playerId, results};
+    payload_t payload = { millis(), packets_sent++ ,buttonState, playerId, hit};
     RF24NetworkHeader header(/*to node*/ hub);
     bool ok = network.write(header,&payload,sizeof(payload));
     if (ok)
