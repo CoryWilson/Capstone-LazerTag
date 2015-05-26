@@ -21,10 +21,10 @@
 #include <IRremote.h>
 
 /*** IR Receiver ***/
-int RECV_PIN = 10; //IR Receiver
+int RECV_PIN = 10;
 IRrecv irrecv(RECV_PIN);
-decode_results irResults;
-int hit = 0;
+decode_results results;
+//bool hit;
 
 RF24 radio(7,8);                    // nRF24L01(+) radio attached using Getting Started board 
 
@@ -50,15 +50,14 @@ struct payload_t {      // Structure of our payload
   unsigned long counter;
   int buttonState;
   int playerId;
-  //decode_results irResults;
-  int hit;
+  decode_results results;
+  //bool hit;
 };
 
 void setup(void)
 {
-  Serial.begin(57600);
-  Serial.println("RF24Network/examples/helloworld_tx/");
-  
+  Serial.begin(9600);
+
   pinMode(2,INPUT_PULLUP);
   pinMode(4,INPUT);
   
@@ -70,31 +69,31 @@ void setup(void)
     player = 02;
   }
   
-  irrecv.enableIRIn(); // Start the IR receiver
-  
   SPI.begin();
   radio.begin();
   network.begin(/*channel*/ 90, /*node address*/ player);
+  
+  irrecv.enableIRIn(); // Start the IR receiver
 }
 
 void loop() {
   
-  buttonState = digitalRead(buttonPin);
+  //buttonState = digitalRead(buttonPin);
   
-  if (irrecv.decode(&irResults)) {
-    //Serial.println(irResults.value, HEX);
-    hit = 25;
-    irrecv.resume(); // Receive the next value
-  }
-  
+
+//  delay(100);
   network.update();                          // Check the network regularly  
   unsigned long now = millis();              // If it's time to send a message, send it!
   if ( now - last_sent >= interval  )
   {
+      if (irrecv.decode(&results)) {
+    Serial.println(results.value, HEX);
+    irrecv.resume(); // Receive the next value
+  }
     last_sent = now;
 
     Serial.print("Sending...");
-    payload_t payload = { millis(), packets_sent++ ,buttonState, playerId, hit};
+    payload_t payload = { millis(), packets_sent++ ,buttonState, playerId, results};
     RF24NetworkHeader header(/*to node*/ hub);
     bool ok = network.write(header,&payload,sizeof(payload));
     if (ok)

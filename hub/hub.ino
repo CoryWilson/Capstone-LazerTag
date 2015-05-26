@@ -32,7 +32,7 @@ struct payload_t {                 // Structure of our payload
   unsigned long counter;
   int buttonState;
   int playerId;
-  int hit;
+  bool hit;
 };
 
 
@@ -60,8 +60,11 @@ void loop(void){
     Serial.print(payload.counter);
     Serial.print(" at ");
     Serial.println(payload.ms);
+    Serial.print("button state ");
     Serial.println(payload.buttonState);
+    Serial.print("Player ");
     Serial.println(payload.playerId);
+    Serial.print("Hit ");
     Serial.println(payload.hit);
   }
 }
