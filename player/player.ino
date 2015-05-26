@@ -87,6 +87,8 @@ void loop() {
    if(results.value == 0x242A){ 
      hit = true;
    }
+//   delay(50);
+//   hit = false;
    Serial.println(hit);
    irrecv.resume(); // Receive the next value
   }
@@ -102,11 +104,12 @@ void loop() {
     payload_t payload = { millis(), packets_sent++ ,buttonState, playerId, hit};
     RF24NetworkHeader header(/*to node*/ hub);
     bool ok = network.write(header,&payload,sizeof(payload));
-    if (ok)
+    if (ok){
+      hit = false;
       Serial.println("ok.");
-    else 
+    }else{ 
       Serial.println("failed.");
-    
+    }
   }
 }
 
