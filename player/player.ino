@@ -25,8 +25,10 @@
 /*** IR Receiver ***/
 int RECV_PIN = 7;
 IRrecv irrecv(RECV_PIN);
+IRsend irsend;
 decode_results results;
 bool hit;
+int button_pushed = 0;
 
 RF24 radio(9,10);                    // nRF24L01(+) radio attached using Getting Started board 
 
@@ -37,7 +39,6 @@ uint16_t player;    // Address of our node in Octal format
 const uint16_t hub = 00;        // Address of the other node in Octal format
       
 const int buttonPin = 4;
-
 int buttonState = 0;
 
 const unsigned long interval = 2000; //ms  // How often to send 'hello world to the other unit
@@ -45,13 +46,10 @@ int playerId;
 unsigned long last_sent;             // When did we last send?
 unsigned long packets_sent;          // How many have we sent already
 
-
-
 struct payload_t {      // Structure of our payload
   //buttonState;
   unsigned long ms;
   unsigned long counter;
-  int buttonState;
   int playerId;
   bool hit;
 };
@@ -82,9 +80,23 @@ void loop() {
   network.update();                          // Check the network regularly  
   
   buttonState = digitalRead(buttonPin);
+
+  if (buttonState == HIGH){
+    button_pushed += 1;
+    if (button_pushed <= 5){
+      irsend.sendSony(0xa60, 12); // Sony TV power code
+//      irsend.sendSony(0x242A, 12); // Sony TV power code
+      Serial.println("Damage Code Sent");
+    }else{
+      Serial.println("This is not an AK47");
+    }
+  }
+  if(buttonState == LOW){
+    button_pushed = 0;
+  }  
   if (irrecv.decode(&results)) {
    Serial.println(results.value, HEX);
-   if(results.value == 0x242A){ 
+   if(results.value == 0x242A || results.value == 0xa60){ 
      hit = true;
    }
 //   delay(50);
@@ -101,7 +113,7 @@ void loop() {
     last_sent = now;
 
     Serial.print("Sending...");
-    payload_t payload = { millis(), packets_sent++ ,buttonState, playerId, hit};
+    payload_t payload = { millis(), packets_sent++, playerId, hit};
     RF24NetworkHeader header(/*to node*/ hub);
     bool ok = network.write(header,&payload,sizeof(payload));
     if (ok){
@@ -112,26 +124,5 @@ void loop() {
     }
   }
 }
-
-/*
-
-buttonState = digitalRead(buttonPin);
-
-
-  if (buttonState == HIGH) {     
-    // turn LED on:    
-    Serial.println("HIGH");
-//     for (int i = 0; i < 3; i++) {
-      irsend.sendSony(0xa60, 12); // Sony TV power code
-      Serial.println("Code");
-      delay(40);
-//    }
-  } 
-  else {
-    // turn LED off:
-//     Serial.println("low");
-  }
-
-*/
 
 
