@@ -82,13 +82,19 @@ void loop() {
   buttonState = digitalRead(buttonPin);
 
   if (buttonState == HIGH){
+    // OMG BUTTON HAS BEEN PRESSED!!!
     button_pushed += 1;
-    if (button_pushed <= 5){
+
+    if (button_pushed <= 2){
       irsend.sendSony(0xa60, 12); // Sony TV power code
 //      irsend.sendSony(0x242A, 12); // Sony TV power code
+      delay(100);
+      irrecv.enableIRIn();
       Serial.println("Damage Code Sent");
+ 
     }else{
       Serial.println("This is not an AK47");
+
     }
   }
   if(buttonState == LOW){
@@ -123,6 +129,7 @@ void loop() {
       Serial.println("failed.");
     }
   }
+  //irrecv.resume();
 }
 
 
